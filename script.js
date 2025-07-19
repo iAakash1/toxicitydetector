@@ -1,6 +1,9 @@
 /**
- * TOXICITY DETECTOR - MODERN JAVASCRIPT
- * Professional relationship assessment tool with premium UX
+ * TOXICITY DETECTOR - ENHANCED JAVASCRIPT
+ * 
+ * This application helps users assess relationship toxicity through a questionnaire.
+ * Features include dynamic question rendering, score calculation, visual feedback,
+ * and accessibility enhancements.
  */
 
 // ==============================================
@@ -8,667 +11,678 @@
 // ==============================================
 
 /**
- * Enhanced question bank with sophisticated scoring
+ * Question bank with weights for scoring algorithm
+ * Positive weights indicate toxic behaviors, negative weights indicate healthy behaviors
  */
 const QUESTIONS = [
-  { text: "I feel genuinely respected when expressing my thoughts and opinions", weight: -3 },
-  { text: "Communication often involves harsh criticism, insults, or belittling", weight: 3 },
-  { text: "I frequently worry about my partner's emotional reactions", weight: 3 },
-  { text: "We have productive conversations about our feelings and needs", weight: -3 },
-  { text: "Jealousy creates tension and restricts personal freedom", weight: 3 },
-  { text: "We maintain complete trust and emotional safety with each other", weight: -3 },
-  { text: "I feel pressured to fundamentally change aspects of my personality", weight: 3 },
-  { text: "Disagreements are resolved through calm, respectful dialogue", weight: -3 },
-  { text: "Personal boundaries are frequently crossed or dismissed", weight: 3 },
-  { text: "I feel genuinely supported in pursuing my personal goals", weight: -3 },
-  { text: "Threats, ultimatums, or manipulation tactics are sometimes used", weight: 3 },
-  { text: "We actively celebrate and encourage each other's achievements", weight: -3 },
-  { text: "I feel comfortable being my authentic self in this relationship", weight: -2 },
-  { text: "There are attempts to control social connections or activities", weight: 3 },
-  { text: "We maintain healthy independence while staying emotionally connected", weight: -2 }
+  { text: "I feel respected when expressing my opinions.", weight: -2 },
+  { text: "We often insult or belittle each other.", weight: 2 },
+  { text: "I am afraid of my partner's reactions.", weight: 2 },
+  { text: "We communicate openly and honestly.", weight: -2 },
+  { text: "Jealousy is a frequent issue between us.", weight: 2 },
+  { text: "We trust each other completely.", weight: -2 },
+  { text: "I feel pressured to change who I am.", weight: 2 },
+  { text: "Conflicts are resolved calmly and fairly.", weight: -2 },
+  { text: "Personal boundaries are ignored.", weight: 2 },
+  { text: "I feel supported in my goals and dreams.", weight: -2 },
+  { text: "Threats or ultimatums are used.", weight: 2 },
+  { text: "We celebrate each other's successes.", weight: -2 }
 ];
 
 /**
- * Response options with nuanced scoring
+ * Likert scale options for responses
  */
-const RESPONSE_OPTIONS = [
-  { text: "Never true", value: 0 },
-  { text: "Rarely true", value: 1 },
-  { text: "Sometimes true", value: 2 },
-  { text: "Often true", value: 3 },
-  { text: "Always true", value: 4 }
+const LIKERT_SCALE = [
+  "Strongly Disagree",
+  "Disagree", 
+  "Neutral",
+  "Agree",
+  "Strongly Agree"
 ];
 
 /**
- * Sophisticated assessment levels
+ * Toxicity level thresholds and corresponding advice
  */
-const ASSESSMENT_LEVELS = {
-  EXCELLENT: {
-    threshold: 0,
-    maxThreshold: 20,
-    title: "Excellent Relationship Health",
-    color: "#22c55e",
-    icon: "💚",
-    description: "Your relationship demonstrates exceptional emotional health, communication, and mutual respect.",
-    advice: [
-      "Continue nurturing open communication",
-      "Maintain the strong foundation you've built",
-      "Consider sharing these positive patterns with others"
-    ]
+const TOXICITY_LEVELS = {
+  HEALTHY: { threshold: 25, class: 'result-healthy', advice: "Healthy dynamics! Keep communicating openly." },
+  MANAGEABLE: { threshold: 50, class: 'result-warning', advice: "Manageable issues. Consider discussing concerns." },
+  CONCERNING: { threshold: 75, class: 'result-danger', advice: "Concerning. Setting clear boundaries may help." },
+  CRITICAL: { threshold: 100, class: 'result-critical', advice: "High toxicity detected! Seek professional guidance." }
+};
+
+// ==============================================
+// DOM ELEMENT REFERENCES
+// ==============================================
+
+/**
+ * Cache DOM elements for better performance and cleaner code
+ */
+const DOM = {
+  form: null,
+  submitBtn: null,
+  clearBtn: null,
+  resultSection: null,
+  progressBar: null,
+  percentElement: null,
+  adviceElement: null,
+  themeToggle: null,
+  loadingOverlay: null,
+  
+  // Initialize DOM references
+  init() {
+    this.form = document.getElementById("quiz");
+    this.submitBtn = document.getElementById("submitBtn");
+    this.clearBtn = document.getElementById("clearBtn");
+    this.resultSection = document.getElementById("result");
+    this.progressBar = document.getElementById("bar");
+    this.percentElement = document.getElementById("percent");
+    this.adviceElement = document.getElementById("advice");
+    this.themeToggle = document.getElementById("themeToggle");
+    
+    // Create loading overlay
+    this.createLoadingOverlay();
   },
-  GOOD: {
-    threshold: 21,
-    maxThreshold: 35,
-    title: "Good Relationship Health",
-    color: "#16a34a",
-    icon: "✅",
-    description: "Your relationship shows strong healthy patterns with minor areas for growth.",
-    advice: [
-      "Address small concerns before they grow",
-      "Continue strengthening communication skills",
-      "Celebrate what's working well"
-    ]
-  },
-  MODERATE: {
-    threshold: 36,
-    maxThreshold: 55,
-    title: "Moderate Concerns",
-    color: "#f59e0b",
-    icon: "⚠️",
-    description: "Some relationship patterns may benefit from attention and improvement.",
-    advice: [
-      "Focus on improving communication patterns",
-      "Consider couples counseling for guidance",
-      "Set clearer boundaries together"
-    ]
-  },
-  CONCERNING: {
-    threshold: 56,
-    maxThreshold: 75,
-    title: "Significant Concerns",
-    color: "#ef4444",
-    icon: "🚨",
-    description: "Your relationship shows patterns that may be impacting your wellbeing.",
-    advice: [
-      "Seek professional counseling support",
-      "Prioritize your personal safety and wellbeing",
-      "Consider involving trusted friends or family"
-    ]
-  },
-  CRITICAL: {
-    threshold: 76,
-    maxThreshold: 100,
-    title: "Critical Safety Concerns",
-    color: "#dc2626",
-    icon: "🆘",
-    description: "This assessment indicates patterns that may pose risks to your wellbeing and safety.",
-    advice: [
-      "Contact professional support immediately",
-      "Reach out to domestic violence resources",
-      "Prioritize your safety above all else",
-      "Contact National Domestic Violence Hotline: 1-800-799-7233"
-    ]
+  
+  /**
+   * Create accessible loading overlay with spinner and screen reader text
+   */
+  createLoadingOverlay() {
+    this.loadingOverlay = document.createElement("div");
+    this.loadingOverlay.className = "loading-overlay hidden";
+    this.loadingOverlay.setAttribute("aria-live", "polite");
+    this.loadingOverlay.innerHTML = `
+      <div class="spinner" aria-hidden="true"></div>
+      <span class="text-white font-medium">Calculating toxicity score...</span>
+      <span class="sr-only">Please wait while we analyze your responses</span>
+    `;
+    
+    // Add to the main container
+    const container = document.querySelector(".glass");
+    container.style.position = "relative";
+    container.appendChild(this.loadingOverlay);
   }
 };
 
 // ==============================================
-// APPLICATION STATE
+// QUESTIONNAIRE MANAGEMENT
 // ==============================================
 
-class AssessmentApp {
-  constructor() {
-    this.responses = new Map();
-    this.currentQuestion = 0;
-    this.isSubmitted = false;
-    this.animationQueue = [];
-    
-    this.init();
-  }
-
+/**
+ * Questionnaire builder and manager
+ */
+const Questionnaire = {
+  
   /**
-   * Initialize the application
+   * Build and render the questionnaire form
    */
-  init() {
-    this.renderQuestions();
-    this.attachEventListeners();
-    this.updateProgressIndicator();
-    this.updateSubmitButton(); // Make sure button state is set initially
-    this.setupThemeToggle();
-    this.setupAccessibility();
-    console.log('🎉 Assessment application initialized');
-  }
-
-  /**
-   * Render all questions with modern styling
-   */
-  renderQuestions() {
-    const quizContainer = document.getElementById('quiz');
-    quizContainer.innerHTML = '';
-
+  build() {
     QUESTIONS.forEach((question, index) => {
-      const questionCard = this.createQuestionCard(question, index);
-      quizContainer.appendChild(questionCard);
+      const questionElement = this.createQuestionElement(question, index);
+      DOM.form.appendChild(questionElement);
     });
-  }
-
+  },
+  
   /**
-   * Create a modern question card component
+   * Create a single question element with radio buttons
+   * @param {Object} question - Question object with text and weight
+   * @param {number} index - Question index
+   * @returns {HTMLElement} - Complete question element
    */
-  createQuestionCard(question, index) {
-    const questionDiv = document.createElement('div');
-    questionDiv.className = 'question-card';
-    questionDiv.setAttribute('data-question-index', index);
+  createQuestionElement(question, index) {
+    // Create question wrapper
+    const wrapper = document.createElement("div");
+    wrapper.className = "space-y-3";
+    wrapper.setAttribute("role", "group");
+    wrapper.setAttribute("aria-labelledby", `question-${index}`);
     
-    questionDiv.innerHTML = `
-      <h3 class="question-title">
-        <span class="text-cyan-400 font-mono text-sm">${String(index + 1).padStart(2, '0')}.</span>
-        ${question.text}
-      </h3>
-      <div class="radio-group" role="radiogroup" aria-labelledby="question-${index}">
-        ${RESPONSE_OPTIONS.map((option, optionIndex) => `
-          <label class="radio-option group" for="q${index}_${optionIndex}">
-            <input 
-              type="radio" 
-              id="q${index}_${optionIndex}" 
-              name="question${index}" 
-              value="${option.value}"
-              data-question="${index}"
-              data-weight="${question.weight}"
-            >
-            <div class="radio-custom"></div>
-            <span class="radio-label">${option.text}</span>
-          </label>
-        `).join('')}
-      </div>
-    `;
-
-    return questionDiv;
-  }
-
+    // Create question label
+    const label = document.createElement("p");
+    label.id = `question-${index}`;
+    label.className = "font-medium text-lg";
+    label.textContent = `${index + 1}. ${question.text}`;
+    wrapper.appendChild(label);
+    
+    // Create options container
+    const optionsContainer = document.createElement("div");
+    optionsContainer.className = "grid grid-cols-1 sm:grid-cols-5 gap-2";
+    
+    // Create radio options
+    LIKERT_SCALE.forEach((optionText, optionIndex) => {
+      const optionElement = this.createOptionElement(
+        optionText, 
+        index, 
+        optionIndex, 
+        `question-${index}`
+      );
+      optionsContainer.appendChild(optionElement);
+    });
+    
+    wrapper.appendChild(optionsContainer);
+    return wrapper;
+  },
+  
   /**
-   * Attach all event listeners
+   * Create a single radio option element
+   * @param {string} text - Option text
+   * @param {number} questionIndex - Question index
+   * @param {number} optionIndex - Option index (0-4)
+   * @param {string} ariaDescribedBy - ARIA described by attribute
+   * @returns {HTMLElement} - Radio option element
    */
-  attachEventListeners() {
-    console.log('Attaching event listeners...');
+  createOptionElement(text, questionIndex, optionIndex, ariaDescribedBy) {
+    const container = document.createElement("div");
+    container.className = "relative";
     
-    // Radio button responses
-    document.addEventListener('change', (e) => {
-      if (e.target.type === 'radio') {
-        console.log('Radio button changed:', e.target);
-        this.handleResponse(e.target);
+    const radioId = `q${questionIndex}_${optionIndex}`;
+    
+    // Hidden radio input
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = `q${questionIndex}`;
+    radio.id = radioId;
+    radio.value = optionIndex + 1;
+    radio.className = "absolute opacity-0";
+    radio.setAttribute("aria-describedby", ariaDescribedBy);
+    
+    // Visible label acting as button
+    const label = document.createElement("label");
+    label.htmlFor = radioId;
+    label.textContent = text;
+    label.className = "radio-option block w-full";
+    label.setAttribute("tabindex", "0");
+    
+    // Add keyboard navigation
+    label.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        radio.checked = true;
+        radio.dispatchEvent(new Event("change", { bubbles: true }));
       }
     });
-
-    // Submit button
-    const submitBtn = document.getElementById('submitBtn');
-    console.log('Submit button found:', submitBtn);
     
-    if (submitBtn) {
-      // Ensure button is clickable and add event listener
-      submitBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('Submit button clicked, responses:', this.responses.size);
-        
-        // Only proceed if not disabled
-        if (!submitBtn.disabled) {
-          this.handleSubmit();
-        } else {
-          console.log('Button is disabled, not submitting');
-        }
-      });
+    container.appendChild(radio);
+    container.appendChild(label);
+    
+    return container;
+  }
+};
+
+// ==============================================
+// SCORE CALCULATION ENGINE
+// ==============================================
+
+/**
+ * Score calculation and analysis
+ */
+const ScoreCalculator = {
+  
+  /**
+   * Calculate toxicity score from form responses
+   * @param {FormData} formData - Form data containing responses
+   * @returns {Object} - Score data including percentage and level
+   */
+  calculateScore(formData) {
+    let rawScore = 0;
+    let minPossibleScore = 0;
+    let maxPossibleScore = 0;
+    
+    // Process each question response
+    QUESTIONS.forEach((question, index) => {
+      const likertValue = parseInt(formData.get(`q${index}`));
+      const mappedValue = likertValue - 3; // Convert 1-5 scale to -2 to +2
       
-      // Force enable button initially for testing
-      submitBtn.style.cursor = 'pointer';
-      console.log('Submit button event listener attached');
+      rawScore += mappedValue * question.weight;
+      minPossibleScore += -2 * Math.abs(question.weight);
+      maxPossibleScore += 2 * Math.abs(question.weight);
+    });
+    
+    // Normalize to percentage (0-100)
+    const percentage = Math.round(
+      ((rawScore - minPossibleScore) / (maxPossibleScore - minPossibleScore)) * 100
+    );
+    
+    return {
+      percentage: Math.max(0, Math.min(100, percentage)), // Clamp to 0-100
+      level: this.getToxicityLevel(percentage),
+      rawScore,
+      minPossibleScore,
+      maxPossibleScore
+    };
+  },
+  
+  /**
+   * Determine toxicity level based on percentage
+   * @param {number} percentage - Toxicity percentage
+   * @returns {Object} - Toxicity level object
+   */
+  getToxicityLevel(percentage) {
+    if (percentage < TOXICITY_LEVELS.HEALTHY.threshold) {
+      return TOXICITY_LEVELS.HEALTHY;
+    } else if (percentage < TOXICITY_LEVELS.MANAGEABLE.threshold) {
+      return TOXICITY_LEVELS.MANAGEABLE;
+    } else if (percentage < TOXICITY_LEVELS.CONCERNING.threshold) {
+      return TOXICITY_LEVELS.CONCERNING;
     } else {
-      console.error('Submit button not found!');
-    }
-
-    // Clear button
-    const clearBtn = document.getElementById('clearBtn');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.handleClear();
-      });
-    }
-
-    // Keyboard navigation
-    document.addEventListener('keydown', (e) => {
-      this.handleKeyboardNavigation(e);
-    });
-  }
-
-  /**
-   * Handle individual question responses
-   */
-  handleResponse(radioInput) {
-    const questionIndex = parseInt(radioInput.dataset.question);
-    const value = parseInt(radioInput.value);
-    const weight = parseFloat(radioInput.dataset.weight);
-
-    this.responses.set(questionIndex, { value, weight });
-    
-    // Visual feedback
-    this.animateQuestionResponse(radioInput.closest('.question-card'));
-    
-    // Update progress
-    this.updateProgressIndicator();
-    
-    // Enable submit when all questions answered
-    this.updateSubmitButton();
-
-    console.log(`Question ${questionIndex + 1} answered:`, { value, weight });
-  }
-
-  /**
-   * Animate question response with modern effects
-   */
-  animateQuestionResponse(questionCard) {
-    questionCard.style.transform = 'scale(1.02)';
-    questionCard.style.borderColor = 'rgba(6, 182, 212, 0.3)';
-    
-    setTimeout(() => {
-      questionCard.style.transform = '';
-      questionCard.style.borderColor = '';
-    }, 200);
-  }
-
-  /**
-   * Update progress indicator
-   */
-  updateProgressIndicator() {
-    const progress = (this.responses.size / QUESTIONS.length) * 100;
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-    
-    if (progressBar) {
-      progressBar.style.width = `${progress}%`;
-    }
-    
-    if (progressText) {
-      progressText.textContent = `${this.responses.size} of ${QUESTIONS.length} questions`;
+      return TOXICITY_LEVELS.CRITICAL;
     }
   }
+};
 
+// ==============================================
+// UI FEEDBACK & ANIMATIONS
+// ==============================================
+
+/**
+ * Visual feedback and animation manager
+ */
+const UIFeedback = {
+  
   /**
-   * Update submit button state
+   * Display loading state
    */
-  updateSubmitButton() {
-    const submitBtn = document.getElementById('submitBtn');
-    const allAnswered = this.responses.size === QUESTIONS.length;
+  showLoading() {
+    DOM.loadingOverlay.classList.remove("hidden");
+    DOM.submitBtn.disabled = true;
+    DOM.clearBtn.disabled = true;
     
-    console.log('Updating submit button:', { 
-      buttonFound: !!submitBtn, 
-      responsesCount: this.responses.size, 
-      questionsTotal: QUESTIONS.length,
-      allAnswered 
-    });
+    // Announce to screen readers
+    this.announceToScreenReader("Calculating your toxicity score, please wait...");
+  },
+  
+  /**
+   * Hide loading state
+   */
+  hideLoading() {
+    DOM.loadingOverlay.classList.add("hidden");
+    DOM.submitBtn.disabled = false;
+    DOM.clearBtn.disabled = false;
+  },
+  
+  /**
+   * Display results with visual feedback
+   * @param {Object} scoreData - Score calculation results
+   */
+  displayResults(scoreData) {
+    const { percentage, level } = scoreData;
     
-    if (submitBtn) {
-      // Properly enable/disable the button
-      submitBtn.disabled = !allAnswered;
-      
-      // Update visual state
-      if (allAnswered) {
-        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        submitBtn.classList.add('animate-pulse');
-        submitBtn.style.opacity = '1';
-        submitBtn.style.cursor = 'pointer';
-        console.log('Button enabled and pulsing');
-        setTimeout(() => submitBtn.classList.remove('animate-pulse'), 2000);
-      } else {
-        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-        submitBtn.style.opacity = '0.5';
-        submitBtn.style.cursor = 'not-allowed';
-      }
+    // Update progress bar
+    DOM.progressBar.style.width = `${percentage}%`;
+    DOM.progressBar.setAttribute("aria-valuenow", percentage);
+    
+    // Update text content
+    DOM.percentElement.textContent = `${percentage}% Toxic`;
+    DOM.percentElement.className = `text-3xl font-bold neon ${level.class}`;
+    
+    DOM.adviceElement.textContent = level.advice;
+    DOM.adviceElement.className = `mt-2 ${level.class}`;
+    
+    // Show results section
+    DOM.resultSection.classList.remove("hidden");
+    DOM.resultSection.setAttribute("aria-live", "polite");
+    
+    // Add visual feedback based on toxicity level
+    this.addVisualFeedback(percentage);
+    
+    // Announce results to screen readers
+    this.announceToScreenReader(
+      `Assessment complete. Toxicity score: ${percentage} percent. ${level.advice}`
+    );
+  },
+  
+  /**
+   * Add visual feedback animations based on score
+   * @param {number} percentage - Toxicity percentage
+   */
+  addVisualFeedback(percentage) {
+    const container = document.querySelector(".glass");
+    
+    if (percentage < TOXICITY_LEVELS.HEALTHY.threshold) {
+      // Launch celebratory confetti for healthy relationships
+      this.launchConfetti();
+    } else if (percentage >= TOXICITY_LEVELS.CONCERNING.threshold) {
+      // Add shake animation for high toxicity
+      container.classList.add("animate-shake");
+      setTimeout(() => {
+        container.classList.remove("animate-shake");
+      }, 600);
     }
-  }
-
+  },
+  
   /**
-   * Handle form submission with sophisticated calculations
+   * Launch confetti animation for positive results
    */
-  async handleSubmit() {
-    console.log('handleSubmit called, responses count:', this.responses.size, 'required:', QUESTIONS.length);
-    
-    if (this.responses.size !== QUESTIONS.length) {
-      console.log('Not all questions answered');
-      this.showErrorMessage('Please answer all questions before submitting.');
+  launchConfetti() {
+    // Check if confetti library is available
+    if (typeof confetti === 'undefined') {
+      console.warn('Confetti library not loaded');
       return;
     }
-
-    console.log('All questions answered, processing...');
-    this.isSubmitted = true;
-    this.showLoadingState();
-
-    // Simulate processing time for better UX
-    await this.delay(1500);
-
-    const results = this.calculateResults();
-    console.log('Results calculated:', results);
-    this.displayResults(results);
-    this.scrollToResults();
-  }
-
-  /**
-   * Advanced scoring algorithm
-   */
-  calculateResults() {
-    let rawScore = 0;
-    let maxPossibleScore = 0;
-
-    // Calculate weighted score
-    for (const [questionIndex, response] of this.responses.entries()) {
-      const question = QUESTIONS[questionIndex];
-      const weightedScore = response.value * Math.abs(response.weight);
+    
+    const duration = 3000; // 3 seconds
+    const end = Date.now() + duration;
+    const colors = ["#21e6c1", "#2781ff", "#ff38f5"];
+    
+    const frame = () => {
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors
+      });
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors
+      });
       
-      if (question.weight > 0) {
-        // Positive weight = toxic behavior
-        rawScore += weightedScore;
-      } else {
-        // Negative weight = healthy behavior (subtract from toxicity)
-        rawScore -= weightedScore;
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
       }
-      
-      maxPossibleScore += 4 * Math.abs(question.weight);
-    }
-
-    // Normalize to 0-100 scale
-    const normalizedScore = Math.max(0, Math.min(100, 
-      ((rawScore + maxPossibleScore) / (2 * maxPossibleScore)) * 100
-    ));
-
-    // Determine assessment level
-    const level = this.getAssessmentLevel(normalizedScore);
-
-    return {
-      score: Math.round(normalizedScore),
-      level,
-      responses: this.responses.size,
-      timestamp: new Date()
     };
-  }
-
+    
+    frame();
+  },
+  
   /**
-   * Get assessment level based on score
+   * Announce message to screen readers
+   * @param {string} message - Message to announce
    */
-  getAssessmentLevel(score) {
-    for (const [key, level] of Object.entries(ASSESSMENT_LEVELS)) {
-      if (score >= level.threshold && score <= level.maxThreshold) {
-        return level;
+  announceToScreenReader(message) {
+    const announcer = document.createElement("div");
+    announcer.setAttribute("aria-live", "polite");
+    announcer.setAttribute("aria-atomic", "true");
+    announcer.className = "sr-only";
+    announcer.textContent = message;
+    
+    document.body.appendChild(announcer);
+    
+    // Remove after announcement
+    setTimeout(() => {
+      document.body.removeChild(announcer);
+    }, 1000);
+  }
+};
+
+// ==============================================
+// FORM VALIDATION & MANAGEMENT
+// ==============================================
+
+/**
+ * Form state management and validation
+ */
+const FormManager = {
+  
+  /**
+   * Check if all questions have been answered
+   * @returns {boolean} - Whether all questions are answered
+   */
+  isComplete() {
+    const formData = new FormData(DOM.form);
+    
+    for (let i = 0; i < QUESTIONS.length; i++) {
+      if (!formData.get(`q${i}`)) {
+        return false;
       }
     }
-    return ASSESSMENT_LEVELS.EXCELLENT;
-  }
-
+    return true;
+  },
+  
   /**
-   * Display results with beautiful animations
+   * Enable or disable submit button based on form completion
    */
-  displayResults(results) {
-    const resultSection = document.getElementById('result');
-    const percentElement = document.getElementById('percent');
-    const barElement = document.getElementById('bar');
-    const adviceElement = document.getElementById('advice');
-
-    if (!resultSection) return;
-
-    // Update result content
-    if (percentElement) {
-      percentElement.textContent = `${results.score}%`;
-      percentElement.style.color = results.level.color;
-    }
-
-    if (adviceElement) {
-      adviceElement.innerHTML = this.createAdviceHTML(results.level);
-    }
-
-    // Animate progress bar
-    if (barElement) {
-      barElement.style.background = `linear-gradient(90deg, ${results.level.color}, ${results.level.color}dd)`;
-      
-      // Animate to score
-      setTimeout(() => {
-        barElement.style.width = `${results.score}%`;
-      }, 100);
-    }
-
-    // Show results with animation
-    resultSection.classList.remove('hidden');
-    resultSection.classList.add('animate-slide-up');
+  updateSubmitButton() {
+    DOM.submitBtn.disabled = !this.isComplete();
     
-    this.hideLoadingState();
-    
-    // Track analytics (if implemented)
-    this.trackAssessmentCompletion(results);
-  }
-
+    // Update button appearance for better UX
+    if (this.isComplete()) {
+      DOM.submitBtn.classList.remove("opacity-50");
+      DOM.submitBtn.setAttribute("aria-disabled", "false");
+    } else {
+      DOM.submitBtn.classList.add("opacity-50");
+      DOM.submitBtn.setAttribute("aria-disabled", "true");
+    }
+  },
+  
   /**
-   * Create rich advice HTML
+   * Clear all form responses
    */
-  createAdviceHTML(level) {
-    return `
-      <div class="result-content">
-        <div class="flex items-center justify-center mb-6">
-          <div class="text-4xl mr-3">${level.icon}</div>
-          <h3 class="text-2xl font-bold text-white">${level.title}</h3>
-        </div>
-        
-        <p class="text-gray-300 text-center mb-6 text-lg leading-relaxed">
-          ${level.description}
-        </p>
-        
-        <div class="bg-white/5 rounded-xl p-6 border border-white/10">
-          <h4 class="text-lg font-semibold text-white mb-4 flex items-center">
-            <svg class="w-5 h-5 mr-2 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            Recommended Actions
-          </h4>
-          <ul class="space-y-3">
-            ${level.advice.map(item => `
-              <li class="flex items-start text-gray-300">
-                <svg class="w-5 h-5 mr-3 mt-0.5 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                ${item}
-              </li>
-            `).join('')}
-          </ul>
-        </div>
-        
-        ${level.threshold >= 56 ? `
-          <div class="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <p class="text-red-300 text-sm text-center">
-              <strong>Important:</strong> If you're in immediate danger, please contact emergency services or the National Domestic Violence Hotline at <a href="tel:18007997233" class="text-red-200 underline">1-800-799-7233</a>
-            </p>
-          </div>
-        ` : ''}
-      </div>
-    `;
-  }
-
-  /**
-   * Handle form reset
-   */
-  handleClear() {
-    // Confirm action
-    if (this.responses.size > 0) {
-      const confirmed = confirm('Are you sure you want to clear all responses? This action cannot be undone.');
-      if (!confirmed) return;
-    }
-
-    // Reset state
-    this.responses.clear();
-    this.isSubmitted = false;
-    
-    // Clear form
-    document.querySelectorAll('input[type="radio"]').forEach(input => {
-      input.checked = false;
+  clearForm() {
+    // Clear all radio buttons
+    const radios = DOM.form.querySelectorAll('input[type="radio"]');
+    radios.forEach(radio => {
+      radio.checked = false;
     });
     
     // Hide results
-    const resultSection = document.getElementById('result');
-    if (resultSection) {
-      resultSection.classList.add('hidden');
-    }
+    DOM.resultSection.classList.add("hidden");
     
-    // Reset progress
-    this.updateProgressIndicator();
+    // Reset submit button
     this.updateSubmitButton();
     
-    // Visual feedback
-    this.showSuccessMessage('Form cleared successfully!');
+    // Announce to screen readers
+    UIFeedback.announceToScreenReader("Form cleared. Please answer all questions to get your toxicity assessment.");
     
-    // Scroll to top
-    document.querySelector('main').scrollIntoView({ behavior: 'smooth' });
-  }
-
+    // Focus first question for better UX
+    const firstRadio = DOM.form.querySelector('input[type="radio"]');
+    if (firstRadio) {
+      firstRadio.focus();
+    }
+  },
+  
   /**
-   * Setup theme toggle functionality
+   * Handle form submission with loading state
    */
-  setupThemeToggle() {
-    const themeToggle = document.getElementById('themeToggle');
-    if (!themeToggle) return;
-
-    // Load saved theme
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-
-    themeToggle.addEventListener('click', () => {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  async handleSubmit() {
+    if (!this.isComplete()) {
+      UIFeedback.announceToScreenReader("Please answer all questions before submitting.");
+      return;
+    }
+    
+    // Show loading state
+    UIFeedback.showLoading();
+    
+    try {
+      // Simulate processing time for better UX
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      document.documentElement.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
+      // Get form data and calculate score
+      const formData = new FormData(DOM.form);
+      const scoreData = ScoreCalculator.calculateScore(formData);
       
-      // Update button text/icon if needed
-      this.updateThemeToggleButton(newTheme);
+      // Display results
+      UIFeedback.displayResults(scoreData);
+      
+    } catch (error) {
+      console.error('Error processing assessment:', error);
+      UIFeedback.announceToScreenReader("An error occurred while processing your assessment. Please try again.");
+    } finally {
+      // Hide loading state
+      UIFeedback.hideLoading();
+    }
+  }
+};
+
+// ==============================================
+// THEME MANAGEMENT
+// ==============================================
+
+/**
+ * Theme switching functionality
+ */
+const ThemeManager = {
+  
+  /**
+   * Toggle between light and dark themes
+   */
+  toggle() {
+    const html = document.documentElement;
+    const isCurrentlyDark = html.classList.contains("dark");
+    
+    if (isCurrentlyDark) {
+      // Switch to light theme
+      html.classList.remove("dark");
+      html.dataset.theme = "light";
+      this.updateToggleText("Switch to Dark Mode");
+      UIFeedback.announceToScreenReader("Switched to light theme");
+    } else {
+      // Switch to dark theme
+      html.classList.add("dark");
+      delete html.dataset.theme;
+      this.updateToggleText("Switch to Light Mode");
+      UIFeedback.announceToScreenReader("Switched to dark theme");
+    }
+    
+    // Save preference
+    localStorage.setItem('theme', isCurrentlyDark ? 'light' : 'dark');
+  },
+  
+  /**
+   * Update toggle button text
+   * @param {string} text - New button text
+   */
+  updateToggleText(text) {
+    DOM.themeToggle.textContent = text;
+  },
+  
+  /**
+   * Initialize theme based on user preference or system preference
+   */
+  init() {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldUseDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+    
+    const html = document.documentElement;
+    
+    if (shouldUseDark) {
+      html.classList.add("dark");
+      this.updateToggleText("Switch to Light Mode");
+    } else {
+      html.dataset.theme = "light";
+      this.updateToggleText("Switch to Dark Mode");
+    }
+  }
+};
+
+// ==============================================
+// EVENT LISTENERS
+// ==============================================
+
+/**
+ * Set up all event listeners
+ */
+const EventManager = {
+  
+  init() {
+    // Form change events for validation
+    DOM.form.addEventListener("change", () => {
+      FormManager.updateSubmitButton();
+    });
+    
+    // Submit button click
+    DOM.submitBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      FormManager.handleSubmit();
+    });
+    
+    // Clear button click
+    DOM.clearBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      FormManager.clearForm();
+    });
+    
+    // Theme toggle
+    DOM.themeToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      ThemeManager.toggle();
+    });
+    
+    // Keyboard navigation for theme toggle
+    DOM.themeToggle.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        ThemeManager.toggle();
+      }
     });
   }
+};
 
+// ==============================================
+// EXTERNAL LIBRARY LOADER
+// ==============================================
+
+/**
+ * Load external libraries
+ */
+const LibraryLoader = {
+  
   /**
-   * Update theme toggle button
+   * Load confetti library for celebrations
    */
-  updateThemeToggleButton(theme) {
-    const themeToggle = document.getElementById('themeToggle');
-    if (themeToggle) {
-      const icon = themeToggle.querySelector('svg');
-      if (icon && theme === 'light') {
-        icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>`;
-      }
-    }
+  loadConfetti() {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js";
+    script.async = true;
+    script.onerror = () => {
+      console.warn('Failed to load confetti library');
+    };
+    document.head.appendChild(script);
   }
-
-  /**
-   * Setup accessibility features
-   */
-  setupAccessibility() {
-    // Keyboard navigation for radio groups
-    document.addEventListener('keydown', (e) => {
-      if (e.target.type === 'radio') {
-        const questionGroup = e.target.closest('.radio-group');
-        const radios = questionGroup.querySelectorAll('input[type="radio"]');
-        let currentIndex = Array.from(radios).indexOf(e.target);
-
-        switch(e.key) {
-          case 'ArrowDown':
-          case 'ArrowRight':
-            e.preventDefault();
-            currentIndex = (currentIndex + 1) % radios.length;
-            radios[currentIndex].focus();
-            radios[currentIndex].click();
-            break;
-          case 'ArrowUp':
-          case 'ArrowLeft':
-            e.preventDefault();
-            currentIndex = currentIndex === 0 ? radios.length - 1 : currentIndex - 1;
-            radios[currentIndex].focus();
-            radios[currentIndex].click();
-            break;
-        }
-      }
-    });
-  }
-
-  /**
-   * Utility methods
-   */
-  delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  scrollToResults() {
-    const resultSection = document.getElementById('result');
-    if (resultSection) {
-      resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }
-
-  showLoadingState() {
-    const submitBtn = document.getElementById('submitBtn');
-    if (submitBtn) {
-      submitBtn.classList.add('loading');
-      submitBtn.disabled = true;
-    }
-  }
-
-  hideLoadingState() {
-    const submitBtn = document.getElementById('submitBtn');
-    if (submitBtn) {
-      submitBtn.classList.remove('loading');
-    }
-  }
-
-  showErrorMessage(message) {
-    // You could implement a toast notification system here
-    alert(message);
-  }
-
-  showSuccessMessage(message) {
-    // You could implement a toast notification system here
-    console.log('✅', message);
-  }
-
-  trackAssessmentCompletion(results) {
-    // Analytics tracking could go here
-    console.log('📊 Assessment completed:', results);
-  }
-
-  handleKeyboardNavigation(e) {
-    // Add global keyboard shortcuts if needed
-    if (e.ctrlKey || e.metaKey) {
-      switch(e.key) {
-        case 'Enter':
-          if (!this.isSubmitted) {
-            const submitBtn = document.getElementById('submitBtn');
-            if (submitBtn && !submitBtn.disabled) {
-              this.handleSubmit();
-            }
-          }
-          break;
-        case 'Backspace':
-          if (e.shiftKey) {
-            this.handleClear();
-          }
-          break;
-      }
-    }
-  }
-}
+};
 
 // ==============================================
 // APPLICATION INITIALIZATION
 // ==============================================
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Initialize the application
-  window.assessmentApp = new AssessmentApp();
-  
-  // Setup global error handling
-  window.addEventListener('error', (e) => {
-    console.error('Application error:', e.error);
-  });
-  
-  console.log('🚀 Toxicity Detector loaded successfully');
-});
+/**
+ * Initialize the entire application
+ */
+function initializeApp() {
+  try {
+    // Initialize DOM references
+    DOM.init();
+    
+    // Build questionnaire
+    Questionnaire.build();
+    
+    // Initialize theme
+    ThemeManager.init();
+    
+    // Set up event listeners
+    EventManager.init();
+    
+    // Load external libraries
+    LibraryLoader.loadConfetti();
+    
+    // Initialize form state
+    FormManager.updateSubmitButton();
+    
+    console.log('Toxicity Detector application initialized successfully');
+    
+  } catch (error) {
+    console.error('Failed to initialize application:', error);
+    
+    // Show error message to user
+    const errorMessage = document.createElement('div');
+    errorMessage.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg z-50';
+    errorMessage.textContent = 'Application failed to load. Please refresh the page.';
+    document.body.appendChild(errorMessage);
+    
+    // Remove error message after 5 seconds
+    setTimeout(() => {
+      if (document.body.contains(errorMessage)) {
+        document.body.removeChild(errorMessage);
+      }
+    }, 5000);
+  }
+}
+
+// Start the application when DOM is loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  initializeApp();
+}
