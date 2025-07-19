@@ -188,26 +188,44 @@ class AssessmentApp {
    * Attach all event listeners
    */
   attachEventListeners() {
+    console.log('Attaching event listeners...');
+    
     // Radio button responses
     document.addEventListener('change', (e) => {
       if (e.target.type === 'radio') {
+        console.log('Radio button changed:', e.target);
         this.handleResponse(e.target);
       }
     });
 
     // Submit button
     const submitBtn = document.getElementById('submitBtn');
-    submitBtn?.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.handleSubmit();
-    });
+    console.log('Submit button found:', submitBtn);
+    
+    if (submitBtn) {
+      // Test if button is clickable
+      submitBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log('Submit button clicked, responses:', this.responses.size);
+        alert('Button clicked! Responses: ' + this.responses.size); // Temporary test
+        this.handleSubmit();
+      });
+      
+      // Also add a direct click test
+      submitBtn.style.cursor = 'pointer';
+      console.log('Submit button event listener attached');
+    } else {
+      console.error('Submit button not found!');
+    }
 
     // Clear button
     const clearBtn = document.getElementById('clearBtn');
-    clearBtn?.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.handleClear();
-    });
+    if (clearBtn) {
+      clearBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.handleClear();
+      });
+    }
 
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
@@ -274,11 +292,21 @@ class AssessmentApp {
     const submitBtn = document.getElementById('submitBtn');
     const allAnswered = this.responses.size === QUESTIONS.length;
     
+    console.log('Updating submit button:', { 
+      buttonFound: !!submitBtn, 
+      responsesCount: this.responses.size, 
+      questionsTotal: QUESTIONS.length,
+      allAnswered 
+    });
+    
     if (submitBtn) {
-      submitBtn.disabled = !allAnswered;
+      // Temporarily always enable button for testing
+      submitBtn.disabled = false; // !allAnswered;
+      submitBtn.style.opacity = allAnswered ? '1' : '0.5';
       
       if (allAnswered) {
         submitBtn.classList.add('animate-pulse');
+        console.log('Button enabled and pulsing');
         setTimeout(() => submitBtn.classList.remove('animate-pulse'), 2000);
       }
     }
@@ -288,11 +316,15 @@ class AssessmentApp {
    * Handle form submission with sophisticated calculations
    */
   async handleSubmit() {
+    console.log('handleSubmit called, responses count:', this.responses.size, 'required:', QUESTIONS.length);
+    
     if (this.responses.size !== QUESTIONS.length) {
+      console.log('Not all questions answered');
       this.showErrorMessage('Please answer all questions before submitting.');
       return;
     }
 
+    console.log('All questions answered, processing...');
     this.isSubmitted = true;
     this.showLoadingState();
 
@@ -300,6 +332,7 @@ class AssessmentApp {
     await this.delay(1500);
 
     const results = this.calculateResults();
+    console.log('Results calculated:', results);
     this.displayResults(results);
     this.scrollToResults();
   }
