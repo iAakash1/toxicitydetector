@@ -1,11 +1,5 @@
 import { PrismaAdapter } from "@auth/prisma-adapter"
-import { type GetServerSidePropsContext } from "next"
-import {
-  getServerSession,
-  type DefaultSession,
-  type NextAuthOptions,
-} from "next-auth"
-import { type Adapter } from "next-auth/adapters"
+import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import GitHubProvider from "next-auth/providers/github"
 import EmailProvider from "next-auth/providers/email"
@@ -14,11 +8,14 @@ import { env } from "@/env.mjs"
 import { db } from "@/server/db"
 
 declare module "next-auth" {
-  interface Session extends DefaultSession {
+  interface Session {
     user: {
       id: string
       role: "USER" | "ADMIN"
-    } & DefaultSession["user"]
+      email?: string | null
+      name?: string | null
+      image?: string | null
+    }
   }
 
   interface User {
@@ -26,18 +23,8 @@ declare module "next-auth" {
   }
 }
 
-export const authOptions: NextAuthOptions = {
-  callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-        role: user.role ?? "USER",
-      },
-    }),
-  },
-  adapter: PrismaAdapter(db) as Adapter,
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(db) as any,
   providers: [
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID!,
@@ -59,6 +46,16 @@ export const authOptions: NextAuthOptions = {
       from: process.env.EMAIL_FROM,
     }),
   ],
+  callbacks: {
+    session: ({ session, user }) => ({
+      ...session,
+      user: {
+        ...session.user,
+        id: user.id,
+        role: user.role ?? "USER",
+      },
+    }),
+  },
   pages: {
     signIn: "/auth/signin",
     error: "/auth/error",
@@ -66,11 +63,4 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "database",
   },
-}
-
-export const getServerAuthSession = (ctx: {
-  req: GetServerSidePropsContext["req"]
-  res: GetServerSidePropsContext["res"]
-}) => {
-  return getServerSession(ctx.req, ctx.res, authOptions)
-}
+})

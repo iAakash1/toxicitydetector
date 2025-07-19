@@ -148,9 +148,9 @@ export function ToxicityAssessment() {
             <Button
               type="submit"
               className="w-full"
-              disabled={!allQuestionsAnswered || submitAnswers.isLoading}
+              disabled={!allQuestionsAnswered || submitAnswers.isPending}
             >
-              {submitAnswers.isLoading ? "Calculating..." : "Calculate Toxicity"}
+              {submitAnswers.isPending ? "Calculating..." : "Calculate Toxicity"}
             </Button>
           </form>
         ) : (

@@ -3,14 +3,14 @@ import { type NextRequest } from "next/server"
 
 import { env } from "@/env.mjs"
 import { appRouter } from "@/server/api/root"
-import { createTRPCContext } from "@/server/api/trpc"
+import { createAppTRPCContext } from "@/server/api/trpc"
 
 const handler = (req: NextRequest) =>
   fetchRequestHandler({
     endpoint: "/api/trpc",
     req,
     router: appRouter,
-    createContext: () => createTRPCContext({ req }),
+    createContext: createAppTRPCContext,
     onError:
       env.NODE_ENV === "development"
         ? ({ path, error }) => {
