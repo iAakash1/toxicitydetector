@@ -26,11 +26,11 @@
 </head>
 <body class="text-gray-200 font-sans selection:bg-pink-500/40">
   <div class="min-h-screen flex flex-col items-center justify-center p-6" id="app">
-    <div class="w-full max-w-2xl glass rounded-2xl shadow-xl p-8 ring-1 ring-white/20">
+    <div class="w-full max-w-3xl glass rounded-2xl shadow-xl p-8 ring-1 ring-white/20">
       <!-- ─────────── Header ─────────── -->
       <header class="mb-6 text-center">
-        <h1 class="text-4xl font-bold neon">Relationship Toxicity Detector</h1>
-        <p class="text-sm text-gray-300 mt-2">Answer each question honestly to see an estimated toxicity score.</p>
+        <h1 class="text-4xl font-bold neon neon-pulse">Relationship Toxicity Detector</h1>
+        <p class="text-sm text-gray-300 mt-2">Answer each question honestly to see an estimated toxicity score and receive personalized guidance.</p>
       </header>
 
       <!-- ─────────── Questionnaire ─────────── -->
@@ -70,6 +70,76 @@
         </div>
         <p id="percent" class="text-3xl font-bold neon"></p>
         <p id="advice" class="mt-2 text-gray-200"></p>
+        
+        <!-- Category Breakdown -->
+        <div id="category-breakdown" class="category-breakdown">
+          <h3 class="text-xl font-semibold mb-3">Toxicity by Category</h3>
+          
+          <div class="category-item category-communication">
+            <div class="flex justify-between">
+              <span>Communication</span>
+              <span id="communication-percent">0%</span>
+            </div>
+            <div class="category-progress">
+              <div id="communication-bar" class="category-bar" style="width: 0%"></div>
+            </div>
+          </div>
+          
+          <div class="category-item category-boundaries">
+            <div class="flex justify-between">
+              <span>Boundaries</span>
+              <span id="boundaries-percent">0%</span>
+            </div>
+            <div class="category-progress">
+              <div id="boundaries-bar" class="category-bar" style="width: 0%"></div>
+            </div>
+          </div>
+          
+          <div class="category-item category-respect">
+            <div class="flex justify-between">
+              <span>Respect</span>
+              <span id="respect-percent">0%</span>
+            </div>
+            <div class="category-progress">
+              <div id="respect-bar" class="category-bar" style="width: 0%"></div>
+            </div>
+          </div>
+          
+          <div class="category-item category-safety">
+            <div class="flex justify-between">
+              <span>Safety</span>
+              <span id="safety-percent">0%</span>
+            </div>
+            <div class="category-progress">
+              <div id="safety-bar" class="category-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Detailed Advice Card -->
+        <div id="detailed-advice" class="advice-card">
+          <h3 id="advice-title" class="font-bold">Your Relationship Assessment</h3>
+          <p id="advice-summary"></p>
+          
+          <div id="advice-points" class="advice-points">
+            <!-- JS will inject specific advice points here -->
+          </div>
+          
+          <div class="advice-actions">
+            <button class="action-btn primary" id="save-results">Save Results</button>
+            <button class="action-btn" id="share-results">Share Assessment</button>
+          </div>
+        </div>
+        
+        <!-- Resources Section -->
+        <div id="resources-section" class="resources-section">
+          <h3 class="text-xl font-semibold mb-2">Helpful Resources</h3>
+          <p class="text-sm text-gray-300 mb-3">These resources may help you improve your relationship health:</p>
+          
+          <div class="resources-list">
+            <!-- Resources will be injected by JS based on assessment -->
+          </div>
+        </div>
       </section>
 
       <!-- ─────────── Footer ─────────── -->
