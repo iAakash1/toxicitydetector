@@ -14,13 +14,6 @@
       "static/chunks/main-app-1548f14104b63ab5.js",
       "static/chunks/app/api/trpc/[trpc]/route-ad350ed5f5776f99.js"
     ],
-    "/api/auth/[...nextauth]/route": [
-      "static/chunks/webpack-f10db5eeef251b15.js",
-      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
-      "static/chunks/964-99adfd997340ec4c.js",
-      "static/chunks/main-app-1548f14104b63ab5.js",
-      "static/chunks/app/api/auth/[...nextauth]/route-ad350ed5f5776f99.js"
-    ],
     "/layout": [
       "static/chunks/webpack-f10db5eeef251b15.js",
       "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
@@ -30,6 +23,13 @@
       "static/chunks/807-33aedfdbd7c3072f.js",
       "static/chunks/233-27d088c2900a5e7d.js",
       "static/chunks/app/layout-850889ffe6c5cb52.js"
+    ],
+    "/api/auth/[...nextauth]/route": [
+      "static/chunks/webpack-f10db5eeef251b15.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-99adfd997340ec4c.js",
+      "static/chunks/main-app-1548f14104b63ab5.js",
+      "static/chunks/app/api/auth/[...nextauth]/route-ad350ed5f5776f99.js"
     ],
     "/page": [
       "static/chunks/webpack-f10db5eeef251b15.js",
