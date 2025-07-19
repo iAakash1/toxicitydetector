@@ -4,58 +4,27 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Relationship Toxicity Detector</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="./public/favicon.svg" />
+  <link rel="icon" type="image/x-icon" href="./public/favicon.ico" />
+  <link rel="apple-touch-icon" href="./public/favicon.ico" />
+  
+  <!-- SEO and accessibility meta tags -->
+  <meta name="description" content="Assess relationship toxicity with our interactive questionnaire. Get insights into relationship dynamics and receive guidance for healthier connections." />
+  <meta name="keywords" content="relationship assessment, toxicity detector, relationship health, communication, trust" />
+  
   <!-- Tailwind CDN for rapid styling (no build step needed) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     /* Enable class‑based dark mode */
     tailwind.config = { darkMode: 'class' }
   </script>
-  <!-- Custom glass & neon styles -->
-  <style>
-    :root {
-      --glass-bg: rgba(255, 255, 255, 0.25);
-      --glass-blur: blur(10px);
-    }
-    [data-theme="light"] body {
-      /* Frosted‑glass light mode over a blurred photo */
-      background: url("https://images.unsplash.com/photo-1454117096348-e8b2b844c6a1?auto=format&fit=crop&w=1374&q=80")
-        no-repeat center/cover fixed;
-    }
-    body {
-      /* Neon dark terminal backdrop */
-      background: #0d0d0d;
-    }
-    .glass {
-      background: var(--glass-bg);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-    }
-    .neon {
-      text-shadow: 0 0 5px #00f5ff, 0 0 10px #00f5ff, 0 0 20px #00f5ff;
-    }
-    .progress-bar {
-      width: 100%;
-      height: 1rem;
-      background: #2d2d2d;
-      border-radius: 9999px;
-      overflow: hidden;
-    }
-    .progress-bar-inner {
-      height: 100%;
-      width: 0;
-      border-radius: inherit;
-      background: linear-gradient(90deg, #21e6c1, #2781ff, #ff38f5);
-      transition: width 1s ease-in-out;
-    }
-    /* Shake animation for high toxicity */
-    @keyframes shake {
-      10%, 90% { transform: translate3d(-1px, 0, 0); }
-      20%, 80% { transform: translate3d(2px, 0, 0); }
-      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-      40%, 60% { transform: translate3d(4px, 0, 0); }
-    }
-    .animate-shake { animation: shake 0.6s both; }
-  </style>
+  
+  <!-- Custom enhanced styles -->
+  <link rel="stylesheet" href="./styles.css" />
+  <!-- Custom enhanced styles -->
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body class="text-gray-200 font-sans selection:bg-pink-500/40">
   <div class="min-h-screen flex flex-col items-center justify-center p-6" id="app">
@@ -67,18 +36,38 @@
       </header>
 
       <!-- ─────────── Questionnaire ─────────── -->
-      <form id="quiz" class="space-y-6">
+      <form id="quiz" class="space-y-6" role="form" aria-label="Relationship Assessment Questionnaire">
         <!-- JS injects questions here dynamically -->
       </form>
 
-      <!-- Submit button -->
-      <button id="submitBtn" class="mt-6 w-full py-3 bg-gradient-to-r from-teal-500 via-indigo-500 to-pink-500 rounded-xl text-white font-semibold disabled:opacity-40" disabled>
-        Calculate Toxicity
-      </button>
+      <!-- Button Group with Submit and Clear buttons -->
+      <div class="button-group">
+        <button 
+          id="submitBtn" 
+          class="btn btn-primary py-3 font-semibold" 
+          disabled
+          aria-describedby="submit-help"
+        >
+          Calculate Toxicity
+        </button>
+        <button 
+          id="clearBtn" 
+          class="btn btn-secondary py-3 font-semibold"
+          aria-describedby="clear-help"
+        >
+          Clear Form
+        </button>
+      </div>
+      
+      <!-- Helper text for buttons -->
+      <div class="mt-2 text-xs text-gray-400 text-center">
+        <div id="submit-help">Answer all questions to enable calculation</div>
+        <div id="clear-help">Reset all answers and start over</div>
+      </div>
 
       <!-- ─────────── Result ─────────── -->
-      <section id="result" class="mt-8 hidden">
-        <div class="progress-bar mb-3">
+      <section id="result" class="mt-8 hidden" aria-live="polite" aria-label="Assessment Results">
+        <div class="progress-bar mb-3" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Toxicity Level">
           <div id="bar" class="progress-bar-inner"></div>
         </div>
         <p id="percent" class="text-3xl font-bold neon"></p>
@@ -87,175 +76,18 @@
 
       <!-- ─────────── Footer ─────────── -->
       <footer class="mt-8 text-center">
-        <button id="themeToggle" class="text-xs underline text-cyan-400">Toggle Light / Dark</button>
+        <button 
+          id="themeToggle" 
+          class="theme-toggle"
+          aria-label="Toggle between light and dark theme"
+        >
+          Toggle Light / Dark
+        </button>
       </footer>
     </div>
   </div>
 
-  <!-- ─────────── Core Logic ─────────── -->
-  <script>
-    // Question bank (weights: +2 = toxic, -2 = healthy)
-    const QUESTIONS = [
-      { text: "I feel respected when expressing my opinions.", weight: -2 },
-      { text: "We often insult or belittle each other.", weight: 2 },
-      { text: "I am afraid of my partner's reactions.", weight: 2 },
-      { text: "We communicate openly and honestly.", weight: -2 },
-      { text: "Jealousy is a frequent issue between us.", weight: 2 },
-      { text: "We trust each other completely.", weight: -2 },
-      { text: "I feel pressured to change who I am.", weight: 2 },
-      { text: "Conflicts are resolved calmly and fairly.", weight: -2 },
-      { text: "Personal boundaries are ignored.", weight: 2 },
-      { text: "I feel supported in my goals and dreams.", weight: -2 },
-      { text: "Threats or ultimatums are used.", weight: 2 },
-      { text: "We celebrate each other's successes.", weight: -2 }
-    ];
-
-    /* ---------- DOM References ---------- */
-    const form = document.getElementById("quiz");
-    const submitBtn = document.getElementById("submitBtn");
-    const resultSection = document.getElementById("result");
-    const bar = document.getElementById("bar");
-    const percentEl = document.getElementById("percent");
-    const adviceEl = document.getElementById("advice");
-
-    /* ---------- Build questionnaire ---------- */
-    QUESTIONS.forEach((q, index) => {
-      const wrapper = document.createElement("div");
-      wrapper.className = "space-y-2";
-
-      const label = document.createElement("p");
-      label.className = "font-medium";
-      label.textContent = `${index + 1}. ${q.text}`;
-      wrapper.appendChild(label);
-
-      const options = document.createElement("div");
-      options.className = "flex justify-between text-xs";
-
-      // Likert scale: 1–5
-      ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"].forEach((opt, i) => {
-        const id = `q${index}_${i}`;
-
-        // Hidden radio input
-        const radio = document.createElement("input");
-        radio.type = "radio";
-        radio.name = `q${index}`;
-        radio.id = id;
-        radio.value = i + 1;
-        radio.className = "peer hidden";
-
-        // Pretty label acting as button
-        const lbl = document.createElement("label");
-        lbl.htmlFor = id;
-        lbl.textContent = opt;
-        lbl.className =
-          "cursor-pointer w-full text-center px-2 py-3 rounded-lg border border-gray-600 " +
-          "peer-checked:bg-gradient-to-r peer-checked:from-teal-500 peer-checked:to-pink-500 " +
-          "peer-checked:text-white transition";
-
-        options.appendChild(radio);
-        options.appendChild(lbl);
-      });
-
-      wrapper.appendChild(options);
-      form.appendChild(wrapper);
-    });
-
-    /* ---------- Enable submit when all answered ---------- */
-    form.addEventListener("change", () => {
-      const answered = new FormData(form);
-      submitBtn.disabled = true; // default lock
-      for (let i = 0; i < QUESTIONS.length; i++) {
-        if (!answered.get(`q${i}`)) return; // still unanswered
-      }
-      submitBtn.disabled = false;
-    });
-
-    /* ---------- Score computation ---------- */
-    submitBtn.addEventListener("click", () => {
-      const data = new FormData(form);
-      let raw = 0,
-        minRaw = 0,
-        maxRaw = 0;
-
-      QUESTIONS.forEach((q, i) => {
-        const likert = parseInt(data.get(`q${i}`));
-        const mapped = likert - 3; // converts 1–5 → −2…+2
-        raw += mapped * q.weight;
-        minRaw += -2 * Math.abs(q.weight);
-        maxRaw += 2 * Math.abs(q.weight);
-      });
-
-      const percent = Math.round(((raw - minRaw) / (maxRaw - minRaw)) * 100);
-
-      // Update UI
-      bar.style.width = percent + "%";
-      percentEl.textContent = percent + "% Toxic";
-
-      let advice = "";
-      if (percent < 25) {
-        advice = "Healthy dynamics! Keep communicating openly.";
-      } else if (percent < 50) {
-        advice = "Manageable issues. Consider discussing concerns.";
-      } else if (percent < 75) {
-        advice = "Concerning. Setting clear boundaries may help.";
-      } else {
-        advice = "High toxicity detected! Seek professional guidance.";
-      }
-      adviceEl.textContent = advice;
-
-      resultSection.classList.remove("hidden");
-
-      // Celebratory/confetti or shake feedback
-      if (percent < 25) {
-        launchConfetti();
-      } else if (percent >= 75) {
-        const card = document.querySelector(".glass");
-        card.classList.add("animate-shake");
-        setTimeout(() => card.classList.remove("animate-shake"), 1000);
-      }
-    });
-
-    /* ---------- Confetti helper ---------- */
-    function launchConfetti() {
-      const duration = 3 * 1000;
-      const end = Date.now() + duration;
-      const colors = ["#21e6c1", "#2781ff", "#ff38f5"];
-      (function frame() {
-        confetti({
-          particleCount: 3,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors
-        });
-        confetti({
-          particleCount: 3,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors
-        });
-        if (Date.now() < end) requestAnimationFrame(frame);
-      })();
-    }
-
-    /* ---------- Dark / Light toggle ---------- */
-    const themeToggle = document.getElementById("themeToggle");
-    themeToggle.addEventListener("click", () => {
-      const html = document.documentElement;
-      if (html.classList.contains("dark")) {
-        html.classList.remove("dark");
-        html.dataset.theme = "light"; // frosted theme in CSS
-      } else {
-        html.classList.add("dark");
-        delete html.dataset.theme;
-      }
-    });
-
-    /* ---------- Load confetti library dynamically ---------- */
-    const s = document.createElement("script");
-    s.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js";
-    document.body.appendChild(s);
-  </script>
+  <!-- Enhanced JavaScript -->
+  <script src="./script.js"></script>
 </body>
 </html>

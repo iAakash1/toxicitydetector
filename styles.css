@@ -1,0 +1,325 @@
+/* ==============================================
+   TOXICITY DETECTOR - ENHANCED STYLES
+   ============================================== */
+
+/* CSS Variables for consistent theming and high contrast */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.25);
+  --glass-blur: blur(10px);
+  
+  /* High contrast color scheme */
+  --text-primary: #ffffff;
+  --text-secondary: #e5e5e5;
+  --text-muted: #cccccc;
+  --bg-primary: #0d0d0d;
+  --bg-secondary: #1a1a1a;
+  --border-color: rgba(255, 255, 255, 0.2);
+  
+  /* Accent colors with high contrast */
+  --accent-cyan: #00f5ff;
+  --accent-teal: #21e6c1;
+  --accent-blue: #2781ff;
+  --accent-pink: #ff38f5;
+  
+  /* Status colors - high contrast */
+  --color-healthy: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-critical: #dc2626;
+  
+  /* Focus and interaction states */
+  --focus-ring: 0 0 0 3px rgba(33, 230, 193, 0.5);
+  --hover-scale: 1.02;
+}
+
+/* Light theme overrides */
+[data-theme="light"] {
+  --text-primary: #1f2937;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  --bg-primary: rgba(255, 255, 255, 0.95);
+  --bg-secondary: rgba(248, 250, 252, 0.95);
+  --border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Base styles */
+body {
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-primary);
+  line-height: 1.6;
+}
+
+/* Light theme background */
+[data-theme="light"] body {
+  background: url("https://images.unsplash.com/photo-1454117096348-e8b2b844c6a1?auto=format&fit=crop&w=1374&q=80")
+    no-repeat center/cover fixed;
+}
+
+/* Enhanced glass morphism effect */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-color);
+}
+
+/* Neon text effect with better readability */
+.neon {
+  text-shadow: 0 0 5px var(--accent-cyan), 0 0 10px var(--accent-cyan), 0 0 20px var(--accent-cyan);
+  color: var(--text-primary);
+}
+
+/* Enhanced progress bar with better contrast */
+.progress-bar {
+  width: 100%;
+  height: 1.25rem;
+  background: var(--bg-secondary);
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.progress-bar-inner {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent-teal), var(--accent-blue), var(--accent-pink));
+  transition: width 1s ease-in-out;
+  position: relative;
+}
+
+/* Progress bar glow effect */
+.progress-bar-inner::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  border-radius: inherit;
+  box-shadow: 0 0 20px rgba(33, 230, 193, 0.5);
+}
+
+/* Enhanced button styles with better accessibility */
+.btn {
+  font-weight: 600;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.btn:hover:not(:disabled) {
+  transform: scale(var(--hover-scale));
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-teal), var(--accent-blue), var(--accent-pink));
+  color: var(--text-primary);
+}
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-primary);
+  border-color: var(--accent-teal);
+}
+
+/* Enhanced radio button styles with better contrast */
+.radio-option {
+  cursor: pointer;
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  transition: all 0.2s ease-in-out;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.radio-option:hover {
+  border-color: var(--accent-teal);
+  background: var(--bg-primary);
+  transform: translateY(-2px);
+}
+
+.radio-option:focus-within {
+  box-shadow: var(--focus-ring);
+}
+
+/* Checked state with high contrast */
+input[type="radio"]:checked + .radio-option {
+  background: linear-gradient(135deg, var(--accent-teal), var(--accent-pink));
+  color: var(--text-primary);
+  border-color: var(--accent-teal);
+  font-weight: 600;
+}
+
+/* Loading spinner with accessibility support */
+.spinner {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--accent-teal);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Enhanced shake animation */
+@keyframes shake {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  10%, 30%, 50%, 70%, 90% { transform: translate3d(-10px, 0, 0); }
+  20%, 40%, 60%, 80% { transform: translate3d(10px, 0, 0); }
+}
+
+.animate-shake {
+  animation: shake 0.6s ease-in-out both;
+}
+
+/* Result styling with color-coded feedback */
+.result-healthy {
+  color: var(--color-healthy);
+}
+
+.result-warning {
+  color: var(--color-warning);
+}
+
+.result-danger {
+  color: var(--color-danger);
+}
+
+.result-critical {
+  color: var(--color-critical);
+}
+
+/* Enhanced theme toggle button */
+.theme-toggle {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--bg-secondary);
+  color: var(--accent-cyan);
+  border: 1px solid var(--border-color);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.theme-toggle:hover {
+  background: var(--bg-primary);
+  color: var(--accent-teal);
+  text-decoration: underline;
+}
+
+.theme-toggle:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Improved accessibility for screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Loading state overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(13, 13, 13, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+  border-radius: inherit;
+  z-index: 10;
+}
+
+/* Button container for improved layout */
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.button-group .btn {
+  flex: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .button-group {
+    flex-direction: column;
+  }
+  
+  .radio-option {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --text-primary: #ffffff;
+    --text-secondary: #ffffff;
+    --border-color: rgba(255, 255, 255, 0.8);
+    --glass-bg: rgba(0, 0, 0, 0.9);
+  }
+  
+  [data-theme="light"] {
+    --text-primary: #000000;
+    --text-secondary: #000000;
+    --border-color: rgba(0, 0, 0, 0.8);
+    --glass-bg: rgba(255, 255, 255, 0.95);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
