@@ -132,6 +132,7 @@ class AssessmentApp {
     this.renderQuestions();
     this.attachEventListeners();
     this.updateProgressIndicator();
+    this.updateSubmitButton(); // Make sure button state is set initially
     this.setupThemeToggle();
     this.setupAccessibility();
     console.log('🎉 Assessment application initialized');
@@ -203,15 +204,21 @@ class AssessmentApp {
     console.log('Submit button found:', submitBtn);
     
     if (submitBtn) {
-      // Test if button is clickable
+      // Ensure button is clickable and add event listener
       submitBtn.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         console.log('Submit button clicked, responses:', this.responses.size);
-        alert('Button clicked! Responses: ' + this.responses.size); // Temporary test
-        this.handleSubmit();
+        
+        // Only proceed if not disabled
+        if (!submitBtn.disabled) {
+          this.handleSubmit();
+        } else {
+          console.log('Button is disabled, not submitting');
+        }
       });
       
-      // Also add a direct click test
+      // Force enable button initially for testing
       submitBtn.style.cursor = 'pointer';
       console.log('Submit button event listener attached');
     } else {
@@ -300,14 +307,21 @@ class AssessmentApp {
     });
     
     if (submitBtn) {
-      // Temporarily always enable button for testing
-      submitBtn.disabled = false; // !allAnswered;
-      submitBtn.style.opacity = allAnswered ? '1' : '0.5';
+      // Properly enable/disable the button
+      submitBtn.disabled = !allAnswered;
       
+      // Update visual state
       if (allAnswered) {
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         submitBtn.classList.add('animate-pulse');
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
         console.log('Button enabled and pulsing');
         setTimeout(() => submitBtn.classList.remove('animate-pulse'), 2000);
+      } else {
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        submitBtn.style.opacity = '0.5';
+        submitBtn.style.cursor = 'not-allowed';
       }
     }
   }
