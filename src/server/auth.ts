@@ -24,6 +24,7 @@ declare module "next-auth" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.NEXTAUTH_SECRET,
   adapter: PrismaAdapter(db) as any,
   providers: [
     // OAuth providers - these work without additional setup
@@ -62,6 +63,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         role: user.role ?? "USER",
       },
     }),
+    async redirect({ url, baseUrl }) {
+      return url.startsWith("/") ? `${baseUrl}${url}` : url;
+    },
   },
   pages: {
     signIn: "/auth/signin",

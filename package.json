@@ -20,7 +20,7 @@
     "e2e:ui": "playwright test --ui",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma migrate deploy",
     "deploy": "scripts/bootstrap.sh",
     "env:check": "scripts/env-setup.sh check",
     "env:template": "scripts/env-setup.sh template",
